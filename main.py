@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 
 ### Window settings ###
-ctypes.windll.user32.SetProcessDPIAware()
+#ctypes.windll.user32.SetProcessDPIAware()
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 p.init()
 font.init()
@@ -44,7 +44,7 @@ class Ray:
         self.colour: Tuple[int, int, int] = colour
         self.type: str = type
 
-    def update(self, Board: List[List[Ray]]) -> None:
+    def update(self, Board: List[List[Ray]]) -> None: 
         """Function for moving a ray."""
 
         # Move pixel
@@ -55,6 +55,8 @@ class Ray:
         self.precise_y += self.speed * math.sin(self.Angle)
         self.board_y = int(round(self.precise_y, 0))
         
+
+        # each code block that fixes if the ray goes outside the bounds of the screen can be a separate function
 
         if self.board_x < 0:                # If outside to the left
             self.board_x = 0
@@ -101,7 +103,7 @@ class Ray:
     def diffuse(self, Board: List[List[float]]) -> None:
         """Function for diffusing part of the ray colour to nearby pixels."""
         
-        for y in range(-1, 2):
+        for y in range(-1, 2): #no hardcoded ranges
             if 0 <= self.board_y + y < height:
                 for x in range(-1, 2):
                     if y == 0 and x == 0:
@@ -121,6 +123,8 @@ class Ray:
         offset_y = 1
 
         # New search function #
+
+        #make angle calculation into function
         for y in range(search_y):
             if 0 <= y + offset_y + self.board_y < height:
                 for x in range(search_x):
@@ -128,7 +132,7 @@ class Ray:
                         pass
                         # Calculate angle between
 
-
+        # fix range so its not hardocded
         for y in range(-2, 3):
             if 0 <= self.board_y + y < height:
                 for x in range(-2, 3):
@@ -136,7 +140,7 @@ class Ray:
                         continue
                     if 0 <= self.board_x + x < width:
                         if not Board[self.board_y + y][self.board_x + x] is None:
-                            try:
+                            try: # move try catch into separate function
                                 net_distance = 1/math.sqrt(x**2 + y**2)
                                 delta_x = abs(self.board_x - Board[self.board_y + y][self.board_x + x].board_x) * (-1 if True else 1)
                                 delta_y = abs(self.board_y - Board[self.board_y + y][self.board_x + x].board_y) * (-1 if True else 1)
@@ -178,7 +182,7 @@ def main() -> None:
 
         screen.fill(Black)
 
-        
+        #make update trace board into function?
         # Update Trace_board
         for y in range(len(Trace_Board)):
             for x in range(len(Trace_Board[y])):

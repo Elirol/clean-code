@@ -31,18 +31,31 @@ Green = (0, 255, 0)
 Blue = (0, 0, 255)
 
 
-class Ray:
+class Point:
+    def __init__(self, x: int, y: int) -> None:
+        self.x = x
+        self.y = y
 
-    def __init__(self, x: int, y: int, Angle: float, speed: float, colour: Tuple[int, int, int], type: str) -> None:
-        """Function for defining a Ray object."""
-        self.board_x: int = x
-        self.board_y: int = y
-        self.precise_x: float = x
-        self.precise_y: float = y
-        self.Angle: float = Angle
-        self.speed: float = speed
+class Motion:
+    def __init__(self, angle: float, speed: float) -> None:
+        self.angle = angle
+        self.speed = speed
+    
+
+class Ray:
+    # I main där rays skapas krävs en Point och Motion class i.e byt till nedanför funktionsanrop
+    # Rays: List[Ray] = [Ray(width//2, height//2, random.uniform(0, 2*math.pi), 0.75, White, "A") for _ in range(number_of_rays)]
+    # Rays: List[Ray] = [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75, White), "A") for _ in range(number_of_rays)]
+    def __init__(self, ray_origin: Point, motion: Motion, colour: Tuple[int, int, int], type: str) -> None:
+        self.board_x: int = ray_origin.x
+        self.board_y: int = ray_origin.y
+        self.precise_x: float = ray_origin.x
+        self.precise_y: float = ray_origin.y
+        self.Angle: float = motion.angle
+        self.speed: float = motion.speed
         self.colour: Tuple[int, int, int] = colour
         self.type: str = type
+        
 
     def update(self, Board: List[List[Ray]]) -> None: 
         """Function for moving a ray."""
@@ -100,16 +113,22 @@ class Ray:
         Board[prev_y][prev_x] = None
         Board[self.board_y][self.board_x] = self
 
-    def diffuse(self, Board: List[List[float]]) -> None:
-        """Function for diffusing part of the ray colour to nearby pixels."""
-        
-        for y in range(-1, 2): #no hardcoded ranges
-            if 0 <= self.board_y + y < height:
-                for x in range(-1, 2):
-                    if y == 0 and x == 0:
+    def diffuse_ray(self, Board: List[List[float]]) -> None:
+        for x, y, dx, dy in self._near_raycell_diffuse_values():
+            Board[x][y] = self._diffuse_intensity(dx, dy)
+
+    def _near_raycell_diffuse_values(self):
+        for dy in range(-1, 2): #no hardcoded ranges :P
+            if 0 <= self.board_y + dy < height:
+                for dx in range(-1, 2):
+                    if dy == 0 and dx == 0:
                         continue
-                    if 0 <= self.board_x + x < width:
-                        Board[self.board_y + y][self.board_x + x] = 0.85/math.sqrt(x**2 + y**2)
+                    x, y = self.board_x + dx, self.board_y + dy
+                    if 0 <= x < width and 0 <= y < height:
+                        yield x, y, dx, dy
+                      
+    def _diffuse_intensity(self, x: int, y: int) -> float:
+        return 0.85 / math.sqrt(x**2 + y**2)
     
     def attract_to_neighbour(self, Board: List[List[Ray]]) -> None:
         """Function that attracts the pixel to nearby neighbours."""
@@ -153,7 +172,10 @@ class Ray:
 
     def draw(self, screen: Surface) -> None:
         """Function for drawing a ray on the screen."""
-        draw.rect(screen, self.colour, (self.board_x*pixel_size, self.board_y*pixel_size, pixel_size, pixel_size))
+        draw.rect(screen, self.colour, self._bounding_ray_rectangle())
+
+    def _bounding_ray_rectangle(self) -> Tuple[int, int, int, int]:
+        return (self.board_x*pixel_size, self.board_y*pixel_size, pixel_size, pixel_size)
 
 def main() -> None: 
     """Main function for running the program."""
@@ -167,7 +189,7 @@ def main() -> None:
     number_of_rays = 100
     Ray_fade_speed = 0.02
 
-    Rays: List[Ray] = [Ray(width//2, height//2, random.uniform(0, 2*math.pi), 0.75, White, "A") for _ in range(number_of_rays)]         # Create rays
+    Rays: List[Ray] = [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for _ in range(number_of_rays)]
     Trace_Board: List[List[float]] = [[0.0 for _ in range(width)] for _ in range(height)]                                   # Create Trace_Board
     Ray_Board: List[List[Ray]] = [[None for x in range(len(Trace_Board[y]))] for y in range(len(Trace_Board))]              # Create Ray_Board
     for ray in Rays:                                                                                                        # Add rays to Ray_Board
@@ -194,7 +216,7 @@ def main() -> None:
         # Update rays
         for ray in Rays:
             Trace_Board[ray.board_y][ray.board_x] = 1
-            ray.diffuse(Trace_Board)
+            ray.diffuse_ray(Trace_Board)
             ray.update(Ray_Board)
             ray.attract_to_neighbour(Ray_Board)
             # ray.draw(screen)

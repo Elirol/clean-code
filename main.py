@@ -237,6 +237,14 @@ def update_Ray_Board_Cell(Ray_Board: List[List[Ray]], x: int, y: int) -> None:
         Ray_Board[y][x].update(Ray_Board)
         Ray_Board[y][x].attract_to_neighbour(Ray_Board)
 
+def draw_Trace_Board(Trace_Board: List[List[float]], screen: Surface) -> None:
+    """Function for drawing the trace board on the screen."""
+    
+    for y in range(len(Trace_Board)):
+        for x in range(len(Trace_Board[y])):
+            if Trace_Board[y][x] > 0.0:
+                draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
+
 def main() -> None: 
     """Main function for running the program."""
     
@@ -257,11 +265,13 @@ def main() -> None:
 
         handle_events()
 
-        screen.fill(Black)
-
         update_Trace_Board(Trace_Board, Ray_fade_speed)
         update_Ray_Board(Ray_Board, Trace_Board, Rays)  
+
+        screen.fill(Black)
+        draw_Trace_Board(Trace_Board, screen)
         display.update()
+        
         clock.tick(tick)
 
 if __name__ == "__main__":

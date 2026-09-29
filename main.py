@@ -221,6 +221,21 @@ def update_Trace_Board_Cell(Trace_Board: List[List[float]], x: int, y: int, Ray_
     if Trace_Board[y][x] > 0.0:
         Trace_Board[y][x] -= Ray_fade_speed
 
+def update_Ray_Board(Ray_Board: List[List[Ray]], Trace_Board: List[List[float]], Rays: List[Ray]) -> None:
+    """Function for updating each cell in the ray board."""
+    for ray in Rays:
+        Trace_Board[ray.board_y][ray.board_x] = 1
+        ray.diffuse_ray(Trace_Board)
+        ray.update(Ray_Board)
+        ray.attract_to_neighbour(Ray_Board)
+
+def update_Ray_Board_Cell(Ray_Board: List[List[Ray]], x: int, y: int) -> None:
+    """Function for updating a single cell in the ray board."""
+
+    if Ray_Board[y][x] is not None:
+        Ray_Board[y][x].diffuse_ray(Ray_Board)
+        Ray_Board[y][x].update(Ray_Board)
+        Ray_Board[y][x].attract_to_neighbour(Ray_Board)
 
 def main() -> None: 
     """Main function for running the program."""
@@ -245,21 +260,7 @@ def main() -> None:
         screen.fill(Black)
 
         update_Trace_Board(Trace_Board, Ray_fade_speed)
-
-        # Update rays
-        for ray in Rays:
-            Trace_Board[ray.board_y][ray.board_x] = 1
-            ray.diffuse_ray(Trace_Board)
-            ray.update(Ray_Board)
-            ray.attract_to_neighbour(Ray_Board)
-            # ray.draw(screen)
-
-        # Draw trace board
-        for y in range(len(Trace_Board)):
-            for x in range(len(Trace_Board[y])):
-                if Trace_Board[y][x] > 0.0:
-                    draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
-
+        update_Ray_Board(Ray_Board, Trace_Board, Rays)  
         display.update()
         clock.tick(tick)
 

@@ -115,7 +115,7 @@ class Ray:
 
     def diffuse_ray(self, Board: List[List[float]]) -> None:
         for x, y, dx, dy in self._near_raycell_diffuse_values():
-            Board[x][y] = self._diffuse_intensity(dx, dy)
+            Board[y][x] = self._diffuse_intensity(dx, dy)
 
     def _near_raycell_diffuse_values(self):
         for dy in range(-1, 2): #no hardcoded ranges :P
@@ -232,13 +232,6 @@ def main() -> None:
     # Ray settings # 
     number_of_rays = 100
     Ray_fade_speed = 0.02
-
-    # Rays: List[Ray] = [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for _ in range(number_of_rays)]
-    # Trace_Board: List[List[float]] = [[0.0 for _ in range(width)] for _ in range(height)]                                   # Create Trace_Board
-    # Ray_Board: List[List[Ray]] = [[None for x in range(len(Trace_Board[y]))] for y in range(len(Trace_Board))]              # Create Ray_Board
-    # for ray in Rays:                                                                                                        # Add rays to Ray_Board
-    #     Ray_Board[ray.board_y][ray.board_x] = ray
-    
     
     Rays: List[Ray] = create_rays(number_of_rays)
     Trace_Board: List[List[float]] = create_pixel_data_board(width, height)                                   

@@ -207,6 +207,21 @@ def quit_game(event: event.Event) -> None:
     if event.type == QUIT:
         sys.exit()
 
+def update_Trace_Board(Trace_Board: List[List[float]], Ray_fade_speed: float) -> None:
+    """Function for updating each cell in the trace board."""
+    
+    for y in range(len(Trace_Board)):
+        for x in range(len(Trace_Board[y])):
+            
+            update_Trace_Board_Cell(Trace_Board, x, y, Ray_fade_speed)
+
+def update_Trace_Board_Cell(Trace_Board: List[List[float]], x: int, y: int, Ray_fade_speed: float) -> None:
+    """Function for updating a single cell in the trace board."""
+    
+    if Trace_Board[y][x] > 0.0:
+        Trace_Board[y][x] -= Ray_fade_speed
+
+
 def main() -> None: 
     """Main function for running the program."""
     
@@ -236,14 +251,7 @@ def main() -> None:
 
         screen.fill(Black)
 
-        #make update trace board into function?
-        # Update Trace_board
-        for y in range(len(Trace_Board)):
-            for x in range(len(Trace_Board[y])):
-                if Trace_Board[y][x] > 0.0:
-                    board_pix = Trace_Board[y][x]
-                    draw.rect(screen, (board_pix*255, board_pix*255, board_pix*255), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
-                    Trace_Board[y][x] -= Ray_fade_speed
+        update_Trace_Board(Trace_Board, Ray_fade_speed)
 
         # Update rays
         for ray in Rays:
@@ -252,7 +260,12 @@ def main() -> None:
             ray.update(Ray_Board)
             ray.attract_to_neighbour(Ray_Board)
             # ray.draw(screen)
-        
+
+        # Draw trace board
+        for y in range(len(Trace_Board)):
+            for x in range(len(Trace_Board[y])):
+                if Trace_Board[y][x] > 0.0:
+                    draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
 
         display.update()
         clock.tick(tick)

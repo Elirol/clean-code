@@ -177,13 +177,25 @@ class Ray:
     def _bounding_ray_rectangle(self) -> Tuple[int, int, int, int]:
         return (self.board_x*pixel_size, self.board_y*pixel_size, pixel_size, pixel_size)
 
+
+def handle_events() -> None:
+    """Function for handling events."""
+
+    for ev in event.get():
+        quit_game(ev)
+
+def quit_game(event: event.Event) -> None:
+    """Function for quitting the game."""
+    
+    if event.type == QUIT:
+        sys.exit()
+
 def main() -> None: 
     """Main function for running the program."""
     
-    ### Game variables ###
-    tick = 60                   # Set the framerate and updaterate
-    clock = tm.Clock()          # Create a clock to manage framerates
-    game = True                 # The main game variable for keeping the game running 
+    tick = 60                   
+    clock = tm.Clock()          
+    game = True
 
     # Ray settings # 
     number_of_rays = 100
@@ -198,9 +210,7 @@ def main() -> None:
     
     while game:
 
-        for ev in event.get():
-            if ev.type == QUIT:
-                sys.exit()
+        handle_events()
 
         screen.fill(Black)
 

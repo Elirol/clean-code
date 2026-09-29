@@ -177,6 +177,23 @@ class Ray:
     def _bounding_ray_rectangle(self) -> Tuple[int, int, int, int]:
         return (self.board_x*pixel_size, self.board_y*pixel_size, pixel_size, pixel_size)
 
+def create_rays(number_of_rays: int) -> List[Ray]:
+    """Function for creating a list of rays."""
+    return [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for _ in range(number_of_rays)]
+
+def create_pixel_data_board(width: int, height: int) -> List[List[float]]:
+    """Function for creating a 2D board."""
+    return [[0.0 for _ in range(width)] for _ in range(height)]
+
+def create_ray_board(width: int, height: int) -> List[List[Ray]]:
+    """Function for creating a 2D board for rays."""
+    return [[None for _ in range(width)] for _ in range(height)]
+
+def insert_rays_into_board(rays: List[Ray], Board: List[List[Ray]]) -> None:
+    """Function for inserting rays into a board."""
+    for ray in rays:
+        Board[ray.board_y][ray.board_x] = ray
+
 
 def handle_events() -> None:
     """Function for handling events."""
@@ -201,13 +218,18 @@ def main() -> None:
     number_of_rays = 100
     Ray_fade_speed = 0.02
 
-    Rays: List[Ray] = [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for _ in range(number_of_rays)]
-    Trace_Board: List[List[float]] = [[0.0 for _ in range(width)] for _ in range(height)]                                   # Create Trace_Board
-    Ray_Board: List[List[Ray]] = [[None for x in range(len(Trace_Board[y]))] for y in range(len(Trace_Board))]              # Create Ray_Board
-    for ray in Rays:                                                                                                        # Add rays to Ray_Board
-        Ray_Board[ray.board_y][ray.board_x] = ray
+    # Rays: List[Ray] = [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for _ in range(number_of_rays)]
+    # Trace_Board: List[List[float]] = [[0.0 for _ in range(width)] for _ in range(height)]                                   # Create Trace_Board
+    # Ray_Board: List[List[Ray]] = [[None for x in range(len(Trace_Board[y]))] for y in range(len(Trace_Board))]              # Create Ray_Board
+    # for ray in Rays:                                                                                                        # Add rays to Ray_Board
+    #     Ray_Board[ray.board_y][ray.board_x] = ray
     
     
+    Rays: List[Ray] = create_rays(number_of_rays)
+    Trace_Board: List[List[float]] = create_pixel_data_board(width, height)                                   
+    Ray_Board: List[List[Ray]] = create_ray_board(width, height)
+    insert_rays_into_board(Rays, Ray_Board)
+
     while game:
 
         handle_events()

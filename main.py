@@ -2,7 +2,7 @@ from __future__ import annotations
 from pygame import Surface, display, event, font, draw, time as tm
 from pygame.locals import *
 
-import ctypes, sys, os, random, math, pygame as p
+import sys, os, random, math, pygame as p
 from typing import List, Tuple
 
 

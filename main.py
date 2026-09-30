@@ -178,9 +178,14 @@ class Ray:
     def _bounding_ray_rectangle(self) -> Tuple[int, int, int, int]:
         return (self.board_x*pixel_size, self.board_y*pixel_size, pixel_size, pixel_size)
 
-def create_rays(number_of_rays: int) -> List[Ray]:
-    """Function for creating a list of rays."""
-    return [Ray(Point(width//2, height//2), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for _ in range(number_of_rays)]
+def create_rays(number_of_rays: int, spawn_radius: int = 10) -> List[Ray]:
+    """Function for creating a list of rays at unique random positions around the centre."""
+    centre_x, centre_y = width // 2, height // 2
+    cells = [(x, y)
+             for x in range(centre_x - spawn_radius, centre_x + spawn_radius + 1)
+             for y in range(centre_y - spawn_radius, centre_y + spawn_radius + 1)]
+    positions = random.sample(cells, number_of_rays)
+    return [Ray(Point(x, y), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for x, y in positions]
 
 def create_pixel_data_board(width: int, height: int) -> List[List[float]]:
     """Function for creating a 2D board."""
@@ -195,6 +200,7 @@ def insert_rays_into_board(rays: List[Ray], Board: List[List[Ray]]) -> None:
     for ray in rays:
         Board[ray.board_y][ray.board_x] = ray
 
+
 def handle_events() -> None:
     """Function for handling events."""
 
@@ -207,35 +213,55 @@ def quit_game(event: event.Event) -> None:
     if event.type == QUIT:
         sys.exit()
 
-def update_Trace_Board(Trace_Board: List[List[float]], Ray_fade_speed: float) -> None:
-    """Function for updating each cell in the trace board."""
+
+def update_trace_board(Rays: List[Ray], Trace_Board: List[List[float]], Ray_fade_speed: float) -> None:
+    """Function for updating the trace board."""
+    
+    stamp_rays_on_trace_board(Rays, Trace_Board)
+    diffuse_rays_on_trace_board(Rays, Trace_Board)
+    fade_rays_on_trace_board(Trace_Board, Ray_fade_speed)
+
+def stamp_rays_on_trace_board(Rays: List[Ray], Trace_Board: List[List[float]]) -> None:
+    """Function for stamping rays on the trace board."""
+    
+    for ray in Rays:
+        Trace_Board[ray.board_y][ray.board_x] = 1
+
+def diffuse_rays_on_trace_board(Rays: List[Ray], Trace_Board: List[List[float]]) -> None:
+    """Function for diffusing rays on the trace board."""
+    
+    for ray in Rays:
+        ray.diffuse_ray(Trace_Board)
+
+def fade_rays_on_trace_board(Trace_Board: List[List[float]], Ray_fade_speed: float) -> None:
+    """Function for fading rays on the trace board."""
     
     for y in range(len(Trace_Board)):
         for x in range(len(Trace_Board[y])):
-            
-            update_Trace_Board_Cell(Trace_Board, x, y, Ray_fade_speed)
+            if Trace_Board[y][x] > 0.0:
+                Trace_Board[y][x] -= Ray_fade_speed
+                if Trace_Board[y][x] < 0.0:
+                    Trace_Board[y][x] = 0.0
 
-def update_Trace_Board_Cell(Trace_Board: List[List[float]], x: int, y: int, Ray_fade_speed: float) -> None:
-    """Function for updating a single cell in the trace board."""
+
+def update_ray_board(Rays: List[Ray], Ray_Board: List[List[Ray]]) -> None:
+    """Function for updating the ray board."""
+
+    update_rays(Rays, Ray_Board)
+    steer_rays_towards_nearby_rays(Rays, Ray_Board)
+
+def update_rays(Rays: List[Ray], Ray_Board: List[List[Ray]]) -> None:
+    """Function for updating rays on the ray board."""
     
-    if Trace_Board[y][x] > 0.0:
-        Trace_Board[y][x] -= Ray_fade_speed
-
-def update_Ray_Board(Ray_Board: List[List[Ray]], Trace_Board: List[List[float]], Rays: List[Ray]) -> None:
-    """Function for updating each cell in the ray board."""
     for ray in Rays:
-        Trace_Board[ray.board_y][ray.board_x] = 1
-        ray.diffuse_ray(Trace_Board)
         ray.update(Ray_Board)
+
+def steer_rays_towards_nearby_rays(Rays: List[Ray], Ray_Board: List[List[Ray]]) -> None:
+    """Function for steering rays towards nearby rays."""
+    
+    for ray in Rays:
         ray.attract_to_neighbour(Ray_Board)
 
-def update_Ray_Board_Cell(Ray_Board: List[List[Ray]], x: int, y: int) -> None:
-    """Function for updating a single cell in the ray board."""
-
-    if Ray_Board[y][x] is not None:
-        Ray_Board[y][x].diffuse_ray(Ray_Board)
-        Ray_Board[y][x].update(Ray_Board)
-        Ray_Board[y][x].attract_to_neighbour(Ray_Board)
 
 def draw_Trace_Board(Trace_Board: List[List[float]], screen: Surface) -> None:
     """Function for drawing the trace board on the screen."""
@@ -244,6 +270,8 @@ def draw_Trace_Board(Trace_Board: List[List[float]], screen: Surface) -> None:
         for x in range(len(Trace_Board[y])):
             if Trace_Board[y][x] > 0.0:
                 draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
+
+
 
 def main() -> None: 
     """Main function for running the program."""
@@ -254,9 +282,10 @@ def main() -> None:
 
     # Ray settings # 
     number_of_rays = 100
+    spawn_radius = 10
     Ray_fade_speed = 0.02
     
-    Rays: List[Ray] = create_rays(number_of_rays)
+    Rays: List[Ray] = create_rays(number_of_rays, spawn_radius)
     Trace_Board: List[List[float]] = create_pixel_data_board(width, height)                                   
     Ray_Board: List[List[Ray]] = create_ray_board(width, height)
     insert_rays_into_board(Rays, Ray_Board)
@@ -265,9 +294,9 @@ def main() -> None:
 
         handle_events()
 
-        update_Trace_Board(Trace_Board, Ray_fade_speed)
-        update_Ray_Board(Ray_Board, Trace_Board, Rays)  
-
+        update_trace_board(Rays, Trace_Board, Ray_fade_speed)
+        update_ray_board(Rays, Ray_Board)
+        
         screen.fill(Black)
         draw_Trace_Board(Trace_Board, screen)
         display.update()

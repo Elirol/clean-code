@@ -158,17 +158,18 @@ class Ray:
                     if y == 0 and x == 0:
                         continue
                     if 0 <= self.board_x + x < width:
-                        if not Board[self.board_y + y][self.board_x + x] is None:
-                            try: # move try catch into separate function
-                                net_distance = 1/math.sqrt(x**2 + y**2)
-                                delta_x = abs(self.board_x - Board[self.board_y + y][self.board_x + x].board_x) * (-1 if True else 1)
-                                delta_y = abs(self.board_y - Board[self.board_y + y][self.board_x + x].board_y) * (-1 if True else 1)
-                                
-                                delta_angle = self.Angle - math.tan(delta_y/delta_x)
-                                additional_angle = angle_weight * net_distance * delta_angle
-                                self.Angle += additional_angle
-                            except ZeroDivisionError:
-                                continue
+
+                        neighbour = Board[self.board_y + y][self.board_x + x]
+                        if neighbour is not None:
+
+                            net_distance = 1/math.sqrt(x**2 + y**2)
+                            delta_x = neighbour.board_x - self.board_x
+                            delta_y = neighbour.board_y - self.board_y
+
+                            target_angle = math.atan2(delta_y, delta_x)
+                            delta_angle = (target_angle - self.Angle + math.pi) % (2 * math.pi) - math.pi
+                            additional_angle = angle_weight * net_distance * delta_angle
+                            self.Angle += additional_angle
 
     def draw(self, screen: Surface) -> None:
         """Function for drawing a ray on the screen."""

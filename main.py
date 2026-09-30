@@ -97,9 +97,6 @@ class Ray:
 
         self.Angle %= 2 * math.pi
 
-
-
-
     def update(self,Board: List[List[Ray]])->None:
         """Function for moving a ray."""
         
@@ -115,8 +112,6 @@ class Ray:
         
         # Edit board
         self.update_board_position(Board,prev_x,prev_y)
-
-    
 
     def diffuse_ray(self, Board: List[List[float]]) -> None:
         for x, y, dx, dy in self._near_raycell_diffuse_values():
@@ -192,7 +187,7 @@ def create_rays(number_of_rays: int, spawn_radius: int = 10) -> List[Ray]:
     positions = random.sample(cells, number_of_rays)
     return [Ray(Point(x, y), Motion(random.uniform(0, 2*math.pi), 0.75), White, "A") for x, y in positions]
 
-def create_pixel_data_board(width: int, height: int) -> List[List[float]]:
+def create_trace_board(width: int, height: int) -> List[List[float]]:
     """Function for creating a 2D board."""
     return [[0.0 for _ in range(width)] for _ in range(height)]
 
@@ -268,6 +263,11 @@ def steer_rays_towards_nearby_rays(Rays: List[Ray], Ray_Board: List[List[Ray]]) 
         ray.attract_to_neighbour(Ray_Board)
 
 
+def draw(screen: Surface, Trace_Board: List[List[float]]) -> None:
+    """Function for drawing the rays and trace board on the screen."""
+    screen.fill(Black)
+    draw_Trace_Board(Trace_Board, screen)
+
 def draw_Trace_Board(Trace_Board: List[List[float]], screen: Surface) -> None:
     """Function for drawing the trace board on the screen."""
     
@@ -275,7 +275,6 @@ def draw_Trace_Board(Trace_Board: List[List[float]], screen: Surface) -> None:
         for x in range(len(Trace_Board[y])):
             if Trace_Board[y][x] > 0.0:
                 draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
-
 
 
 def main() -> None: 
@@ -291,7 +290,7 @@ def main() -> None:
     Ray_fade_speed = 0.02
     
     Rays: List[Ray] = create_rays(number_of_rays, spawn_radius)
-    Trace_Board: List[List[float]] = create_pixel_data_board(width, height)                                   
+    Trace_Board: List[List[float]] = create_trace_board(width, height)                                   
     Ray_Board: List[List[Ray]] = create_ray_board(width, height)
     insert_rays_into_board(Rays, Ray_Board)
 
@@ -302,10 +301,9 @@ def main() -> None:
         update_trace_board(Rays, Trace_Board, Ray_fade_speed)
         update_ray_board(Rays, Ray_Board)
         
-        screen.fill(Black)
-        draw_Trace_Board(Trace_Board, screen)
-        display.update()
+        draw(screen, Trace_Board)
         
+        display.update()
         clock.tick(tick)
 
 if __name__ == "__main__":

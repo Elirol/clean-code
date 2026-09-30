@@ -57,7 +57,7 @@ class Ray:
         self.type: str = type
         
 
-    def handle_vertical_boundary(self) -> None:
+    def handle_horizontal_boundary(self) -> None:
         if self.board_x < 0:
             self.board_x = 0
             self.precise_x = 0
@@ -69,7 +69,7 @@ class Ray:
             self.Angle = math.pi - self.Angle
 
     
-    def handle_horizontal_boundary(self) -> None:
+    def handle_vertical_boundary(self) -> None:
         if self.board_y < 0:
             self.board_y = 0
             self.precise_y = 0

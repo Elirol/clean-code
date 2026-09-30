@@ -57,61 +57,66 @@ class Ray:
         self.type: str = type
         
 
-    def update(self, Board: List[List[Ray]]) -> None: 
-        """Function for moving a ray."""
+    def handle_vertical_boundary(self) -> None:
+        if self.board_x < 0:
+            self.board_x = 0
+            self.precise_x = 0
+            self.Angle = math.pi - self.Angle
 
-        # Move pixel
-        prev_x = self.board_x
-        prev_y = self.board_y
+        elif self.board_x >= width:
+            self.board_x = width - 1
+            self.precise_x = width - 1
+            self.Angle = math.pi - self.Angle
+
+    
+    def handle_horizontal_boundary(self) -> None:
+        if self.board_y < 0:
+            self.board_y = 0
+            self.precise_y = 0
+            self.Angle = -self.Angle
+
+        elif self.board_y >= height:
+            self.board_y = height - 1
+            self.precise_y = height - 1
+            self.Angle = -self.Angle
+
+    def move(self):
         self.precise_x += self.speed * math.cos(self.Angle)
         self.board_x = int(round(self.precise_x, 0))
         self.precise_y += self.speed * math.sin(self.Angle)
         self.board_y = int(round(self.precise_y, 0))
+
+    def update_board_position(self,Board: List[List[Ray]],prev_x,prev_y)->None:
         
-
-        # each code block that fixes if the ray goes outside the bounds of the screen can be a separate function
-
-        if self.board_x < 0:                # If outside to the left
-            self.board_x = 0
-            self.precise_x = 0
-
-            if self.Angle < math.pi:
-                self.Angle -= 2 * (math.pi/2 - (math.pi - self.Angle))
-            else:
-                self.Angle += 2 * (math.pi/2 - (self.Angle - math.pi))
-        
-        elif self.board_x >= width:         # If outside to the right
-            self.board_x = width-1
-            self.precise_x = width-1
-            
-            if self.Angle < math.pi/2:
-                self.Angle += 2 * (math.pi/2 - self.Angle)
-            else:
-                self.Angle -= 2 * (math.pi/2 - (2 * math.pi - self.Angle))
-
-        if self.board_y < 0:                # If outside to the top
-            self.board_y = 0
-            self.precise_y = 0
-
-            if self.Angle < math.pi/2:
-                self.Angle -= 2 * (math.pi/2 - (math.pi/2 - self.Angle))
-            else:
-                self.Angle += 2 * (math.pi/2 - (self.Angle - math.pi/2)) 
-
-        elif self.board_y >= height:        # If outside to the bottom
-            self.board_y = height-1
-            self.precise_y = height-1
-
-            if self.Angle < 3 * math.pi/2:
-                self.Angle -= 2 * (math.pi/2 - (3*math.pi/2 - self.Angle))
-            else:
-                self.Angle += 2 * (math.pi/2 - (self.Angle - 3*math.pi/2))
-
-        self.Angle %= 2*math.pi     # Get angle between 0.0 - 2*pi
-        
-        # Edit board
         Board[prev_y][prev_x] = None
         Board[self.board_y][self.board_x] = self
+
+    def handle_boundaries(self) -> None:
+        self.handle_vertical_boundary()
+        self.handle_horizontal_boundary()
+
+        self.Angle %= 2 * math.pi
+
+
+
+
+    def update(self,Board: List[List[Ray]])->None:
+        """Function for moving a ray."""
+        
+        prev_x = self.board_x
+        prev_y = self.board_y
+    
+        # Move pixel
+        self.move()
+
+        # each code block that fixes if the ray goes outside the bounds of the screen can be a separate function
+        
+        self.handle_boundaries()
+        
+        # Edit board
+        self.update_board_position(Board,prev_x,prev_y)
+
+    
 
     def diffuse_ray(self, Board: List[List[float]]) -> None:
         for x, y, dx, dy in self._near_raycell_diffuse_values():

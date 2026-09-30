@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 from pygame import Surface, display, event, font, draw, time as tm
 from pygame.locals import *
 
 import sys, os, random, math, pygame as p
 from typing import List, Tuple
-
+from dataclasses import dataclass
 
 ### Window settings ###
 #ctypes.windll.user32.SetProcessDPIAware()
@@ -31,16 +32,15 @@ Green = (0, 255, 0)
 Blue = (0, 0, 255)
 
 
+@dataclass
 class Point:
-    def __init__(self, x: int, y: int) -> None:
-        self.x = x
-        self.y = y
+    x: int
+    y: int
 
+@dataclass
 class Motion:
-    def __init__(self, angle: float, speed: float) -> None:
-        self.angle = angle
-        self.speed = speed
-    
+    angle: float
+    speed: float
 
 class Ray:
     # I main där rays skapas krävs en Point och Motion class i.e byt till nedanför funktionsanrop
@@ -193,7 +193,6 @@ def insert_rays_into_board(rays: List[Ray], Board: List[List[Ray]]) -> None:
     """Function for inserting rays into a board."""
     for ray in rays:
         Board[ray.board_y][ray.board_x] = ray
-
 
 def handle_events() -> None:
     """Function for handling events."""

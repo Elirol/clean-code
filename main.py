@@ -130,50 +130,103 @@ class Ray:
     def _diffuse_intensity(self, x: int, y: int) -> float:
         return 0.85 / math.sqrt(x**2 + y**2)
     
-    def attract_to_neighbour(self, Board: List[List[Ray]]) -> None:
-        """Function that attracts the pixel to nearby neighbours."""
+    def attract_to_neighbour(self, ray_board: List[List[Ray]]) -> None:
+        """Steer the ray towards nearby rays."""
 
-        # * New search function starts the search with the "self" objects position in the top left corner. 
-        # * The offset variables can be adjusted so that the "self" object is moved around, including outside of the search view.
         angle_weight = 0.15
-        search_x = 5
-        search_y = 3
-        offset_x = 0
-        offset_y = 1
+        neighbours = self._find_neighbours(ray_board, search_radius=2)
 
-        # New search function #
+        for neighbour in neighbours:
+            self._steer_towards(neighbour, angle_weight)
 
-        #make angle calculation into function
-        for y in range(search_y):
-            if 0 <= y + offset_y + self.board_y < height:
-                for x in range(search_x):
-                    if 0 <= x + offset_x + self.board_x < width and not Board[y + offset_y + self.board_y][x + offset_x + self.board_x] is None:
-                        pass
-                        # Calculate angle between
+    def _find_neighbours(self, ray_board: List[List[Ray]], search_radius: int) -> List[Ray]:
+        """Find rays within the given search radius."""
 
-        # fix range so its not hardocded
-        for y in range(-2, 3):
-            if 0 <= self.board_y + y < height:
-                for x in range(-2, 3):
-                    if y == 0 and x == 0:
-                        continue
-                    if 0 <= self.board_x + x < width:
+        neighbours = []
 
-                        neighbour = Board[self.board_y + y][self.board_x + x]
-                        if neighbour is not None:
+        for y in range(-search_radius, search_radius + 1):
+            for x in range(-search_radius, search_radius + 1):
+                if self._is_neighbour_cell(x, y):
+                    self._add_neighbour(neighbours, ray_board, x, y)
+                    
+        return neighbours
 
-                            net_distance = 1/math.sqrt(x**2 + y**2)
-                            delta_x = neighbour.board_x - self.board_x
-                            delta_y = neighbour.board_y - self.board_y
+    def _get_neighbour(self,Board: List[List[Ray]], x: int, y: int) -> Ray | None:
+        """Get the ray at a neighbouring position."""
 
-                            target_angle = math.atan2(delta_y, delta_x)
-                            delta_angle = (target_angle - self.Angle + math.pi) % (2 * math.pi) - math.pi
-                            additional_angle = angle_weight * net_distance * delta_angle
-                            self.Angle += additional_angle
+        return Board[self.board_y + y][self.board_x + x]
+    
+    def _add_neighbour(self, neighbours: List[Ray], ray_board: List[List[Ray]], x: int, y: int) -> None: #four arguments xddddddddddddddddddd
+        """Add a ray to the neighbour list if one exists at the position."""
+
+        neighbour = self._get_neighbour(ray_board, x, y) #command query separation
+
+        if neighbour is not None:
+            neighbours.append(neighbour)
+
+    def _is_neighbour_cell(self, x: int, y: int) -> bool:
+        """Check whether an offset represents a valid neighbouring cell."""
+
+        return (
+            not self._is_current_position(x, y)
+            and self._is_inside_board(x, y)
+        )
+
+
+    def _is_current_position(self, x: int, y: int) -> bool:
+        """Check whether the offset refers to this ray's position."""
+
+        return x == 0 and y == 0
+
+
+    def _is_inside_board(self, x: int, y: int) -> bool:
+        """Check whether a relative position is inside the board."""
+
+        board_x = self.board_x + x
+        board_y = self.board_y + y
+
+        return 0 <= board_x < width and 0 <= board_y < height
+
+
+    def _steer_towards(self, neighbour: Ray, angle_weight: float) -> None:
+        """Adjust the ray's angle towards a neighbouring ray."""
+
+        distance_weight = self._distance_weight_to(neighbour)
+        target_angle = self._angle_towards(neighbour)
+        angle_difference = self._angle_difference(target_angle)
+
+        angle_change = angle_weight * distance_weight * angle_difference
+        self.Angle += angle_change
+
+
+    def _distance_weight_to(self, neighbour: Ray) -> float:
+        """Calculate the inverse-distance weight of a neighbouring ray."""
+
+        delta_x = neighbour.board_x - self.board_x
+        delta_y = neighbour.board_y - self.board_y
+
+        distance = math.sqrt(delta_x**2 + delta_y**2)
+
+        return 1 / distance
+
+
+    def _angle_towards(self, neighbour: Ray) -> float:
+        """Calculate the angle from this ray towards a neighbour."""
+
+        delta_x = neighbour.board_x - self.board_x
+        delta_y = neighbour.board_y - self.board_y
+
+        return math.atan2(delta_y, delta_x)
+
+
+    def _angle_difference(self, target_angle: float) -> float:
+        """Calculate the shortest signed difference to a target angle."""
+
+        return (target_angle - self.Angle + math.pi) % (2 * math.pi) - math.pi
 
     def draw(self, screen: Surface) -> None:
         """Function for drawing a ray on the screen."""
-        draw.rect(screen, self.colour, self._bounding_ray_rectangle())
+        p.draw.rect(screen, self.colour, self._bounding_ray_rectangle())
 
     def _bounding_ray_rectangle(self) -> Tuple[int, int, int, int]:
         return (self.board_x*pixel_size, self.board_y*pixel_size, pixel_size, pixel_size)
@@ -274,7 +327,7 @@ def draw_Trace_Board(Trace_Board: List[List[float]], screen: Surface) -> None:
     for y in range(len(Trace_Board)):
         for x in range(len(Trace_Board[y])):
             if Trace_Board[y][x] > 0.0:
-                draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
+                p.draw.rect(screen, (int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255), int(Trace_Board[y][x]*255)), (x*pixel_size, y*pixel_size, pixel_size, pixel_size))
 
 
 def main() -> None: 
